@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib
 
 import matplotlib.pyplot as plt
+from matplotlib.animation import PillowWriter
 
 
 def visualize_ppo(model_path, seed, num_steps):
@@ -21,7 +22,7 @@ def visualize_ppo(model_path, seed, num_steps):
 
     # Set up device and environment
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    env = GridWorldEnv(mode="two_walls")
+    env = GridWorldEnv(mode="cshape")
     grid_size = float(env.grid_size)
 
     # Load PPO actor network.
@@ -81,6 +82,8 @@ def visualize_ppo(model_path, seed, num_steps):
     C = matplotlib.colormaps["twilight"](angles)
     C = C[..., :3]
 
+    vis_mask = vis_mask.cpu().numpy()
+
     ax.quiver(
         X[vis_mask],
         Y[vis_mask],
@@ -94,9 +97,12 @@ def visualize_ppo(model_path, seed, num_steps):
     )
 
     fig.canvas.draw()
-    plt.show()
+    plt.savefig('ppo_visualization.png', dpi=150, bbox_inches='tight')
+    print("Saved PPO visualization as ppo_visualization.png")
+    # plt.show()  # Comment out to avoid display issues
 
-    breakpoint()
+
+    # breakpoint()
     # ipdb.set_trace()
 
 
@@ -117,7 +123,7 @@ def visualize_fpo(model_path, seed, n_steps):
 
     # Set up device and environment
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    env = GridWorldEnv(mode="two_walls")
+    env = GridWorldEnv(mode="cshape")
     grid_size = float(env.grid_size)
 
     # Load policy.
@@ -195,6 +201,8 @@ def visualize_fpo(model_path, seed, n_steps):
     C = matplotlib.colormaps["twilight"](angles)
     C = C[..., :3]
 
+    vis_mask = vis_mask.cpu().numpy()
+
     Q = ax.quiver(
         X[vis_mask],
         Y[vis_mask],
@@ -208,7 +216,7 @@ def visualize_fpo(model_path, seed, n_steps):
         cmap="twilight",
     )
 
-    for step in range(n_steps):
+    def update(step):
         # Update quiver data.
         U = trajectories[step][:, 0].reshape(num_points, num_points)
         V = trajectories[step][:, 1].reshape(num_points, num_points)
@@ -230,10 +238,15 @@ def visualize_fpo(model_path, seed, n_steps):
         ax.set_title(
             f"Denoised vector field step {step}/{n_steps}, same noise everywhere: {same_noise}"
         )
+        
+        print(f"Processing frame {step}/{n_steps}")
+        return [Q]  # Return the modified artists
 
-        # Draw the plot.
-        fig.canvas.draw()
-        plt.pause(0.5)
+    ani = matplotlib.animation.FuncAnimation(fig, update, frames=n_steps, interval=5, blit=False)
+
+    print("Saving animation...")
+    ani.save('fpo_visualization.gif', writer=PillowWriter(fps=2))
+    print("Saved animation as fpo_visualization.gif")
 
     plt.show()
 
@@ -245,7 +258,7 @@ def visualize_fpo_specific_state(model_path, seed, num_steps, n_noise_samples):
 
     # Set up device and environment
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    env = GridWorldEnv(mode="two_walls")
+    env = GridWorldEnv(mode="cshape")
     grid_size = float(env.grid_size)
 
     # Load policy.

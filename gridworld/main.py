@@ -127,7 +127,7 @@ def main(args):
                                 'render': True,
                                 'render_every_i': 1000,
                                 # FPO specific parameters:
-                                'grid_mode': 'two_walls',
+                                'grid_mode': 'cshape',
                                 'num_fpo_samples': 50,
                                 'positive_advantage': False,
                           }

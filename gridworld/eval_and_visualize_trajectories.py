@@ -54,7 +54,7 @@ def evaluate_trajectories(args):
 
     # Fixed start points used in the paper figure
     start_points = [
-        (17, 12),
+        (16, 12),
         (11, 13),
         (6, 9),
         (20, 17),
@@ -150,56 +150,14 @@ def visualize_trajectories(trajectory_file, args):
     model_name = os.path.splitext(os.path.basename(trajectory_file))[0]
 
     # create env and get reward map
-    env = GridWorldEnv("two_walls")
+    env = GridWorldEnv("cshape")
     size = env.grid_size
     rm = env.reward_map
 
     fig, ax = plt.subplots(figsize=(6, 6))
 
-    img = np.ones((size, size, 3), dtype=np.uint8) * 240
-    gc = np.array(list(env.config.goal_cells))
-    for i in range(len(gc)):
-        x, y = gc[i, :]
-        img[y, x] = [42, 157, 143]
-    ax.imshow(
-        img,
-        extent=(0, size, 0, size),
-    )
-
-    # highlight death cells in red
-    dc = np.array(list(env.config.death_cells), dtype=float)
-    if dc.size:
-        ax.scatter(dc[:,0]+0.5, dc[:,1]+0.5,
-                   marker='s', s=200,
-                   color=np.array([229,57,70])/255.,
-                   label='Death')
-    # highlight goal cells in green
-    gc = np.array(list(env.config.goal_cells), dtype=float)
-
-    if gc.size:
-        ax.scatter(gc[:,0]+0.5, gc[:,1]+0.5,
-                   marker='s', s=200,
-                   color=np.array([42,157,143])/255.,
-                   label='Goal')
-
-    ax.imshow(
-        np.ones((size, size)).astype(np.float32) * 0,
-        extent=(0, size, 0, size),
-        cmap='Greys',
-        vmin=0,
-        vmax=1,
-        alpha=0.4,
-        zorder=2,
-    )
-
-    majors = np.arange(0, size + 1, 5)
-    minors = np.arange(0, size + 1, 1)
-    ax.set_xticks(majors)
-    ax.set_yticks(majors)
-    ax.set_xticks(minors, minor=True)
-    ax.set_yticks(minors, minor=True)
-    ax.grid(which="minor", color="#ddd", linestyle="-", linewidth=0.5)
-    ax.grid(which="major", color="#bbb", linestyle="--", linewidth=1)
+    # Use environment's built-in rendering that includes walls
+    env.render_into_axes(ax)
 
     # plot each trajectory as a time-colored line
     cmap = plt.get_cmap(args.cmap)
